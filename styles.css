@@ -144,3 +144,19 @@ svg{width:100%;height:auto;display:block;}
   font-size:12px;
   line-height:1.4;
 }
+
+.page-footer{
+  margin-top: 24px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--stroke);
+  color: var(--muted);
+  font-size: 12px;
+}
+.page-footer a{
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+.page-footer a:hover{
+  text-decoration: underline;
+}
+
