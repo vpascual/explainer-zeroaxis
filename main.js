@@ -5,13 +5,15 @@ const cfg = {
   margin: { top: 18, right: 18, bottom: 44, left: 52 },
   n: 12,
   valueRange: [80, 120],
-  baselinePad: 10, // fins a min(data)-pad
+  baselinePad: 10,
 };
 
+// --- State ---
 let state = {
-  mode: "bars", // "bars" | "lines"
+  mode: "bars",
   data: makeData(cfg.n, cfg.valueRange),
   baseline: 0,
+  showExplain: false,
 };
 
 // --- UI refs ---
@@ -19,23 +21,40 @@ const btnRandom = document.querySelector("#btnRandom");
 const btnBars = document.querySelector("#btnBars");
 const btnLines = document.querySelector("#btnLines");
 const btnReset = document.querySelector("#btnReset");
+const btnExplain = document.querySelector("#btnExplain");
 
 const baselineInput = document.querySelector("#baseline");
 const baselineValue = document.querySelector("#baselineValue");
 const hint = document.querySelector("#hint");
-const takeaway = document.querySelector("#takeaway");
+
+const explainBox = document.querySelector("#explainBox");
+const explainTitle = document.querySelector("#explainTitle");
+const explainText = document.querySelector("#explainText");
+
+const meta = document.querySelector("#meta");
+
+// --- Theme colors (match CSS intent) ---
+const COLORS = {
+  grid: "#e5e7eb",
+  axis: "#cbd5e1",
+  axisText: "#6b7280",
+  baseline: "#c7cdd6",
+
+  // bluish marks
+  accent: "#2563eb",       // blue-600
+  accentStroke: "#1d4ed8", // blue-700
+  accentFill: "#93c5fd",   // blue-300
+};
 
 // --- Init ---
 setupSvg();
 setupControls();
-syncBaselineLimitsToData();
+syncBaselineLimitsToData(true);
 render();
 
 // --- Functions ---
 function setupSvg() {
   svg.attr("viewBox", `0 0 ${svg.attr("width")} ${svg.attr("height")}`);
-
-  svg.append("g").attr("class", "plot");
   svg.append("g").attr("class", "x-axis");
   svg.append("g").attr("class", "y-axis");
   svg.append("g").attr("class", "grid");
@@ -45,7 +64,6 @@ function setupSvg() {
 function setupControls() {
   btnRandom.addEventListener("click", () => {
     state.data = makeData(cfg.n, cfg.valueRange);
-    // mantenim baseline si encara és vàlid; si no, el clamp
     syncBaselineLimitsToData(true);
     render();
   });
@@ -70,6 +88,12 @@ function setupControls() {
     render();
   });
 
+  // Robust toggle: don’t rely on render() order
+  btnExplain.addEventListener("click", () => {
+    state.showExplain = !state.showExplain;
+    renderExplain();
+  });
+
   baselineInput.addEventListener("input", (e) => {
     state.baseline = +e.target.value;
     render();
@@ -77,7 +101,6 @@ function setupControls() {
 }
 
 function makeData(n, [lo, hi]) {
-  // categories A..L i valors random amb una mica de variabilitat
   const cats = d3.range(n).map(i => String.fromCharCode(65 + i));
   return cats.map(c => ({
     x: c,
@@ -88,8 +111,6 @@ function makeData(n, [lo, hi]) {
 function syncBaselineLimitsToData(clamp = false) {
   const minY = d3.min(state.data, d => d.y);
   const maxY = d3.max(state.data, d => d.y);
-
-  // Baseline slider: 0..(minY - pad) però mai < 0
   const maxBaseline = Math.max(0, Math.floor(minY - cfg.baselinePad));
 
   baselineInput.min = "0";
@@ -99,13 +120,10 @@ function syncBaselineLimitsToData(clamp = false) {
   if (clamp) state.baseline = Math.max(0, Math.min(state.baseline, maxBaseline));
   baselineInput.value = String(state.baseline);
 
-  // UI text
   baselineValue.textContent = String(state.baseline);
   hint.textContent = maxBaseline === 0
-    ? `Aquest dataset no permet tallar gaire (min=${minY}, max=${maxY}).`
-    : `Pots tallar fins a ${maxBaseline} (min=${minY}, max=${maxY}).`;
-
-  updateTakeaway();
+    ? `This dataset leaves little room to truncate the axis (min=${minY}, max=${maxY}).`
+    : `You can truncate down to ${maxBaseline} (min=${minY}, max=${maxY}).`;
 }
 
 function render() {
@@ -121,8 +139,8 @@ function render() {
   const minY = d3.min(state.data, d => d.y);
   const maxY = d3.max(state.data, d => d.y);
 
-  const y0 = state.baseline;           // baseline (possibly >0)
-  const y1 = Math.max(maxY, y0);       // ensure domain is valid
+  const y0 = state.baseline;
+  const y1 = Math.max(maxY, y0);
 
   const xBand = d3.scaleBand()
     .domain(state.data.map(d => d.x))
@@ -138,23 +156,18 @@ function render() {
     .domain([y0, y1]).nice()
     .range([innerH, 0]);
 
-  const gPlot = svg.select(".plot")
-    .attr("transform", `translate(${left},${top})`);
-
-  // Grid (y)
+  // Grid
   const yTicks = y.ticks(5);
-  const grid = svg.select(".grid")
-    .attr("transform", `translate(${left},${top})`);
-
-  grid.selectAll("line")
+  svg.select(".grid")
+    .attr("transform", `translate(${left},${top})`)
+    .selectAll("line")
     .data(yTicks, d => d)
     .join(
       enter => enter.append("line")
         .attr("x1", 0).attr("x2", innerW)
         .attr("y1", d => y(d)).attr("y2", d => y(d))
-        .attr("stroke", "rgba(255,255,255,.08)"),
-      update => update
-        .attr("y1", d => y(d)).attr("y2", d => y(d)),
+        .attr("stroke", COLORS.grid),
+      update => update.attr("y1", d => y(d)).attr("y2", d => y(d)),
       exit => exit.remove()
     );
 
@@ -179,11 +192,10 @@ function render() {
   marks.selectAll("*").remove();
 
   if (state.mode === "bars") {
-    // baseline line
     marks.append("line")
       .attr("x1", 0).attr("x2", innerW)
       .attr("y1", y(y0)).attr("y2", y(y0))
-      .attr("stroke", "rgba(255,255,255,.25)");
+      .attr("stroke", COLORS.baseline);
 
     marks.selectAll("rect")
       .data(state.data, d => d.x)
@@ -192,9 +204,11 @@ function render() {
       .attr("width", xBand.bandwidth())
       .attr("y", d => y(Math.max(d.y, y0)))
       .attr("height", d => Math.max(0, y(y0) - y(d.y)))
-      .attr("rx", 6)
-      .attr("fill", "rgba(255,255,255,.18)")
-      .attr("stroke", "rgba(255,255,255,.30)");
+      .attr("rx", 8)
+      .attr("fill", COLORS.accentFill)
+      .attr("fill-opacity", 0.55)
+      .attr("stroke", COLORS.accentStroke)
+      .attr("stroke-opacity", 0.45);
 
   } else {
     const line = d3.line()
@@ -205,8 +219,9 @@ function render() {
       .datum(state.data)
       .attr("d", line)
       .attr("fill", "none")
-      .attr("stroke", "rgba(255,255,255,.70)")
-      .attr("stroke-width", 2);
+      .attr("stroke", COLORS.accentStroke)
+      .attr("stroke-width", 2.25)
+      .attr("stroke-opacity", 0.9);
 
     marks.selectAll("circle")
       .data(state.data, d => d.x)
@@ -214,45 +229,57 @@ function render() {
       .attr("cx", d => xPoint(d.x))
       .attr("cy", d => y(d.y))
       .attr("r", 4)
-      .attr("fill", "rgba(255,255,255,.85)");
+      .attr("fill", COLORS.accent)
+      .attr("fill-opacity", 0.9);
 
-    // optional: baseline reference
     marks.append("line")
       .attr("x1", 0).attr("x2", innerW)
       .attr("y1", y(y0)).attr("y2", y(y0))
-      .attr("stroke", "rgba(255,255,255,.18)");
+      .attr("stroke", COLORS.baseline);
   }
 
-  // Update UI text (baseline)
   baselineValue.textContent = String(state.baseline);
-  updateTakeaway(minY, maxY);
+  renderMeta(minY, maxY);
+  renderExplain(); // keep explanation consistent with mode & state
 }
 
 function styleAxis(g) {
-  g.selectAll("path, line").attr("stroke", "rgba(255,255,255,.18)");
-  g.selectAll("text").attr("fill", "rgba(255,255,255,.75)").attr("font-size", 12);
+  g.selectAll("path, line").attr("stroke", COLORS.axis);
+  g.selectAll("text").attr("fill", COLORS.axisText).attr("font-size", 12);
 }
 
-function updateTakeaway(minY, maxY) {
-  const minVal = minY ?? d3.min(state.data, d => d.y);
-  const maxVal = maxY ?? d3.max(state.data, d => d.y);
-
-  const range = maxVal - minVal;
+function renderMeta(minY, maxY) {
+  const range = maxY - minY;
   const baseline = state.baseline;
 
-  // “Distorsió” simple: quina part del rang real estàs “ampliant” en pantalla
-  // quan talles per sobre de 0 (només orientatiu)
-  const denom = (maxVal - 0) || 1;
-  const visible = (maxVal - baseline) || 1;
+  const denom = (maxY - 0) || 1;
+  const visible = (maxY - baseline) || 1;
   const amplification = denom / visible;
 
-  const modeText = state.mode === "bars"
-    ? "Barres: tallar l’eix sol exagerar diferències perquè la magnitud es llegeix des de 0."
-    : "Línia: tallar l’eix canvia la percepció de variació, però no trenca la semàntica de “mida des de 0” com en barres.";
-
   const ampText = baseline > 0
-    ? `Amb baseline=${baseline}, estàs comprimint l’interval visible. Amplificació aprox.: x${amplification.toFixed(2)}.`
-    : "Amb baseline=0, no hi ha tall de l’eix.";
+    ? `Visual amplification (approx.): ×${amplification.toFixed(2)}`
+    : `No truncation (baseline at 0).`;
 
-  takeaway.textContent = `${modeText} Dades: min=${minVal}, max=${maxVal}, rang=${range}. ${ampText}`;
+  meta.textContent = `Data: min=${minY}, max=${maxY}, range=${range}. ${ampText}`;
+}
+
+function renderExplain() {
+  if (!state.showExplain) {
+    explainBox.classList.add("is-hidden");
+    btnExplain.textContent = "Explain";
+    return;
+  }
+
+  explainBox.classList.remove("is-hidden");
+  btnExplain.textContent = "Hide explanation";
+
+  if (state.mode === "bars") {
+    explainTitle.textContent = "Bars: baseline matters";
+    explainText.textContent =
+      "Bar charts encode magnitude by length. Because the comparison is made against the baseline, bars are generally expected to start at zero. Truncating the y-axis can make small differences look much larger than they are.";
+  } else {
+    explainTitle.textContent = "Lines: it depends";
+    explainText.textContent =
+      "Line charts emphasize change across an ordered x-axis. Starting at zero is not always necessary. Truncation can be acceptable when you want to focus on variation, but it can also mislead if readers interpret the chart as showing absolute magnitude. Context and intent matter.";
+  }
 }

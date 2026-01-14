@@ -1,37 +1,38 @@
 <!doctype html>
-<html lang="ca">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zero axis explainer (bars vs lines)</title>
+  <title>Zero baseline explainer (bars vs lines)</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 </head>
 <body>
   <main class="wrap">
     <header class="head">
-      <h1>Zero axis: bars vs lines</h1>
+      <h1>Zero baseline: bars vs lines</h1>
       <p class="sub">
-        Les barres codifiquen magnitud des de 0. Tallar l’eix pot exagerar diferències. Amb línies, el missatge depèn més de si vols magnitud o variació.
+        Use the slider to change the y-axis minimum and see how the same data can look more or less dramatic.
       </p>
     </header>
 
     <section class="panel">
       <div class="controls">
         <div class="row">
-          <button id="btnRandom">Genera dades</button>
+          <button id="btnRandom" type="button">Random data</button>
 
-          <div class="toggle" role="group" aria-label="Tipus de gràfic">
-            <button id="btnBars" class="active" type="button">Barres</button>
-            <button id="btnLines" type="button">Línia</button>
+          <div class="toggle" role="group" aria-label="Chart type">
+            <button id="btnBars" class="active" type="button">Bars</button>
+            <button id="btnLines" type="button">Line</button>
           </div>
 
-          <button id="btnReset">Baseline a 0</button>
+          <button id="btnReset" type="button">Baseline to 0</button>
+          <button id="btnExplain" type="button">Explain</button>
         </div>
 
         <div class="row baseline">
           <label for="baseline">
-            Mínim eix Y: <span id="baselineValue">0</span>
+            Y-axis minimum: <span id="baselineValue">0</span>
           </label>
           <input id="baseline" type="range" min="0" max="0" value="0" step="1" />
           <div class="hint" id="hint"></div>
@@ -39,10 +40,16 @@
       </div>
 
       <div class="viz">
-        <svg id="chart" width="960" height="420" aria-label="gràfic"></svg>
+        <svg id="chart" width="960" height="420" aria-label="chart"></svg>
       </div>
 
-      <footer class="takeaway" id="takeaway"></footer>
+      <!-- Hidden by default -->
+      <aside class="explain is-hidden" id="explainBox" aria-live="polite">
+        <h2 id="explainTitle">Explanation</h2>
+        <p id="explainText"></p>
+      </aside>
+
+      <footer class="meta" id="meta"></footer>
     </section>
   </main>
 
