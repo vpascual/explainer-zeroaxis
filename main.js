@@ -5,15 +5,14 @@ const cfg = {
   margin: { top: 18, right: 18, bottom: 44, left: 52 },
   n: 12,
   valueRange: [80, 120],
-  baselinePad: 10,
+  baselinePad: 10, // slider max = min(data) - pad
 };
 
 // --- State ---
 let state = {
-  mode: "bars",
+  mode: "bars", // "bars" | "lines"
   data: makeData(cfg.n, cfg.valueRange),
   baseline: 0,
-  showExplain: false,
 };
 
 // --- UI refs ---
@@ -21,13 +20,11 @@ const btnRandom = document.querySelector("#btnRandom");
 const btnBars = document.querySelector("#btnBars");
 const btnLines = document.querySelector("#btnLines");
 const btnReset = document.querySelector("#btnReset");
-const btnExplain = document.querySelector("#btnExplain");
 
 const baselineInput = document.querySelector("#baseline");
 const baselineValue = document.querySelector("#baselineValue");
 const hint = document.querySelector("#hint");
 
-const explainBox = document.querySelector("#explainBox");
 const explainTitle = document.querySelector("#explainTitle");
 const explainText = document.querySelector("#explainText");
 
@@ -88,12 +85,6 @@ function setupControls() {
     render();
   });
 
-  // Robust toggle: don’t rely on render() order
-  btnExplain.addEventListener("click", () => {
-    state.showExplain = !state.showExplain;
-    renderExplain();
-  });
-
   baselineInput.addEventListener("input", (e) => {
     state.baseline = +e.target.value;
     render();
@@ -121,9 +112,11 @@ function syncBaselineLimitsToData(clamp = false) {
   baselineInput.value = String(state.baseline);
 
   baselineValue.textContent = String(state.baseline);
-  hint.textContent = maxBaseline === 0
-    ? `This dataset leaves little room to truncate the axis (min=${minY}, max=${maxY}).`
-    : `You can truncate down to ${maxBaseline} (min=${minY}, max=${maxY}).`;
+
+  // Clearer hint (no "truncate down to ...")
+  hint.textContent =
+    `This dataset ranges from ${minY} to ${maxY}. ` +
+    `Raising the y-axis minimum truncates the scale and can visually amplify differences.`;
 }
 
 function render() {
@@ -240,7 +233,7 @@ function render() {
 
   baselineValue.textContent = String(state.baseline);
   renderMeta(minY, maxY);
-  renderExplain(); // keep explanation consistent with mode & state
+  renderExplain(minY, maxY);
 }
 
 function styleAxis(g) {
@@ -263,23 +256,24 @@ function renderMeta(minY, maxY) {
   meta.textContent = `Data: min=${minY}, max=${maxY}, range=${range}. ${ampText}`;
 }
 
-function renderExplain() {
-  if (!state.showExplain) {
-    explainBox.classList.add("is-hidden");
-    btnExplain.textContent = "Explain";
-    return;
-  }
+function renderExplain(minY, maxY) {
+  const baseline = state.baseline;
 
-  explainBox.classList.remove("is-hidden");
-  btnExplain.textContent = "Hide explanation";
+  const common =
+    `Data range: ${minY}–${maxY}. ` +
+    `Raising the y-axis minimum truncates the scale and can visually amplify differences.`;
 
   if (state.mode === "bars") {
-    explainTitle.textContent = "Bars: baseline matters";
+    explainTitle.textContent = "Why it matters (bars)";
     explainText.textContent =
-      "Bar charts encode magnitude by length. Because the comparison is made against the baseline, bars are generally expected to start at zero. Truncating the y-axis can make small differences look much larger than they are.";
+      `${common} ` +
+      `With bar charts, the baseline is part of the encoding: bar length is read as magnitude from the baseline. ` +
+      `That’s why bars are generally expected to start at zero, truncation can be misleading.`;
   } else {
-    explainTitle.textContent = "Lines: it depends";
+    explainTitle.textContent = "Why it matters (lines)";
     explainText.textContent =
-      "Line charts emphasize change across an ordered x-axis. Starting at zero is not always necessary. Truncation can be acceptable when you want to focus on variation, but it can also mislead if readers interpret the chart as showing absolute magnitude. Context and intent matter.";
+      `${common} ` +
+      `With line charts, a non-zero baseline can be ok when the goal is to emphasize variation, not absolute magnitude. ` +
+      `It can still mislead if readers interpret the slope as “big change” without noticing the truncated axis, context matters.`;
   }
 }

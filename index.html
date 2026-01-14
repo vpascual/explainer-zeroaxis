@@ -10,14 +10,22 @@
 <body>
   <main class="wrap">
     <header class="head">
-  <h1>Zero baseline: bars vs lines</h1>
-  <p class="sub">
-    This interactive explainer is inspired by an article by Enrico Bertini on teaching data visualization through small, focused examples.
-    It illustrates why managing axes carefully, especially the y-axis baseline, is critical to avoid misleading interpretations.
-    Use the controls below to explore how the same data can tell very different stories depending on how the axis is set.
-  </p>
-</header>
-
+      <h1>Zero baseline: bars vs lines</h1>
+      <p class="sub">
+        This page is a small interactive explainer inspired by an article by
+        <a href="https://filwd.substack.com/p/teaching-data-visualization-with-f5e"
+           target="_blank" rel="noopener noreferrer">
+          Enrico Bertini
+        </a>
+        on using focused, interactive examples to teach data visualization concepts.
+      </p>
+      <p class="sub">
+        The explainer focuses on the role of the y-axis baseline in bar charts and line charts.
+        Its goal is to show how changing the axis minimum can dramatically alter the visual
+        impression of the data, and why careful axis design is essential to avoid misleading
+        interpretations.
+      </p>
+    </header>
 
     <section class="panel">
       <div class="controls">
@@ -30,7 +38,6 @@
           </div>
 
           <button id="btnReset" type="button">Baseline to 0</button>
-          <button id="btnExplain" type="button">Explain</button>
         </div>
 
         <div class="row baseline">
@@ -46,23 +53,21 @@
         <svg id="chart" width="960" height="420" aria-label="chart"></svg>
       </div>
 
-      <!-- Hidden by default -->
-      <aside class="explain is-hidden" id="explainBox" aria-live="polite">
-        <h2 id="explainTitle">Explanation</h2>
-        <p id="explainText"></p>
+      <!-- Why it matters: BELOW the chart -->
+      <aside class="explain-inline" id="explainBox" aria-live="polite">
+        <div class="explain-title" id="explainTitle"></div>
+        <p class="explain-text" id="explainText"></p>
       </aside>
 
       <footer class="meta" id="meta"></footer>
     </section>
-    <footer class="page-footer">
-  <p>
-    Created by Víctor Pascual, 
-    <a href="https://www.onetandem.com" target="_blank" rel="noopener noreferrer">
-      OneTandem
-    </a>.
-  </p>
-</footer>
 
+    <footer class="page-footer">
+      <p>
+        Created by Víctor Pasqual, co-founder of
+        <a href="https://www.onetandem.com" target="_blank" rel="noopener noreferrer">OneTandem</a>.
+      </p>
+    </footer>
   </main>
 
   <script type="module" src="main.js"></script>
