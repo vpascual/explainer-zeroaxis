@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zero axis explainer (bars vs lines)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+</head>
+<body>
+  <main class="wrap">
+    <header class="head">
+      <h1>Zero axis: bars vs lines</h1>
+      <p class="sub">
+        Les barres codifiquen magnitud des de 0. Tallar l’eix pot exagerar diferències. Amb línies, el missatge depèn més de si vols magnitud o variació.
+      </p>
+    </header>
+
+    <section class="panel">
+      <div class="controls">
+        <div class="row">
+          <button id="btnRandom">Genera dades</button>
+
+          <div class="toggle" role="group" aria-label="Tipus de gràfic">
+            <button id="btnBars" class="active" type="button">Barres</button>
+            <button id="btnLines" type="button">Línia</button>
+          </div>
+
+          <button id="btnReset">Baseline a 0</button>
+        </div>
+
+        <div class="row baseline">
+          <label for="baseline">
+            Mínim eix Y: <span id="baselineValue">0</span>
+          </label>
+          <input id="baseline" type="range" min="0" max="0" value="0" step="1" />
+          <div class="hint" id="hint"></div>
+        </div>
+      </div>
+
+      <div class="viz">
+        <svg id="chart" width="960" height="420" aria-label="gràfic"></svg>
+      </div>
+
+      <footer class="takeaway" id="takeaway"></footer>
+    </section>
+  </main>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

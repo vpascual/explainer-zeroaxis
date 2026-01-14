@@ -1,0 +1,60 @@
+:root {
+  --bg: #0b0d10;
+  --panel: #12161b;
+  --text: #e9eef5;
+  --muted: #9aa6b2;
+  --stroke: rgba(255,255,255,.12);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background: var(--bg);
+  color: var(--text);
+}
+.wrap { max-width: 1040px; margin: 28px auto; padding: 0 16px; }
+.head h1 { margin: 0 0 8px; font-size: 24px; }
+.sub { margin: 0; color: var(--muted); line-height: 1.35; max-width: 75ch; }
+
+.panel {
+  margin-top: 16px;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.controls { display: grid; gap: 12px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+button {
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  border: 1px solid var(--stroke);
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover { background: rgba(255,255,255,.09); }
+.toggle { display: inline-flex; border: 1px solid var(--stroke); border-radius: 12px; overflow: hidden; }
+.toggle button { border: 0; border-right: 1px solid var(--stroke); border-radius: 0; }
+.toggle button:last-child { border-right: 0; }
+.toggle button.active { background: rgba(255,255,255,.14); }
+
+.baseline label { color: var(--muted); }
+.baseline input[type="range"] { width: min(520px, 100%); }
+#baselineValue { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.hint { color: var(--muted); font-size: 12px; }
+.viz { margin-top: 10px; }
+svg { width: 100%; height: auto; display: block; }
+
+.takeaway {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px dashed var(--stroke);
+}
